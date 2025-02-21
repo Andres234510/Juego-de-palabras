@@ -1,160 +1,159 @@
 let players = [];
-        let currentPlayerIndex = 0;
-        let gameState = {
-            words: [],
-            letter: '',
-            timeLeft: 60,
-            timerInterval: null
-        };
+let currentPlayerIndex = 0;
+let gameState = { words: [], letter: '', timeLeft: 60 };
 
-        function setPlayers(count) {
-            document.querySelector('.welcome-screen').style.display = 'none';
-            document.querySelector('.players-setup').style.display = 'block';
-            
-            const inputsContainer = document.getElementById('player-inputs');
-            inputsContainer.innerHTML = '';
-            
-            for (let i = 0; i < count; i++) {
-                const div = document.createElement('div');
-                div.className = 'player-input';
-                div.innerHTML = `
-                    <input type="text" placeholder="Nombre del Jugador ${i + 1}" 
-                           id="player${i}" required>
-                `;
-                inputsContainer.appendChild(div);
-            }
+
+// funcion para escoger el numero de Playeres y el nombre de Playeres
+function setPlayers(count) {
+    document.querySelector('.welcome-screen').style.display = 'none';
+    document.querySelector('.players-setup').style.display = 'block';
+    
+    const inputsContainer = document.getElementById('player-inputs');
+    inputsContainer.innerHTML = '';
+    
+    for (let i = 0; i < count; i++) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = `Player ${i + 1}`;
+        inputsContainer.appendChild(input);
+    }
+}
+
+// funcion para que empiece el juego
+function startGame() {
+    players = Array.from(document.querySelectorAll('.players-setup input')).map(input => ({
+        name: input.value || `Player ${players.length + 1}`,
+        points: 0,
+        words: []
+    }));
+    
+    document.querySelector('.players-setup').style.display = 'none';
+    showPrepareScreen();
+}
+
+//mostrar la letra con la cual se va a empezar las palabras
+
+function showPrepareScreen() {
+    const player = players[currentPlayerIndex];
+    const letters = 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ';
+    player.letter = letters[Math.floor(Math.random() * letters.length)];
+
+    gameState = { words: [], letter: player.letter, timeLeft: 20 };
+
+    document.querySelector('.word-list').innerHTML = ''; 
+    document.querySelector('.prepare-screen').style.display = 'block';
+    document.querySelector('.prepare-message').textContent = `¡${player.name}, es tu turno!`;
+    document.querySelector('.letter-display').textContent = player.letter;
+}
+
+
+// funcion para que empiece el juego 
+
+function startPlayerTimer() {
+    document.querySelector('.prepare-screen').style.display = 'none';
+    document.querySelector('.game-screen').style.display = 'block';
+    
+    const player = players[currentPlayerIndex];
+    document.querySelector('.current-player').textContent = `Turno de: ${player.name}`;
+    
+
+    const wordInput = document.getElementById('word-input');
+    wordInput.placeholder = `word with the letter "${gameState.letter}"`;
+    
+    startTimer();
+}
+
+// funcion para que empiece el tiempo 
+function startTimer() {
+    const timer = document.querySelector('.timer');
+    gameState.timerInterval = setInterval(() => {
+        gameState.timeLeft--;
+        timer.textContent = `${gameState.timeLeft}s`;
+        
+        if (gameState.timeLeft <= 0) endPlayerTurn();
+    }, 1000);
+}
+
+// funcion que para que cuando de enter se ponga la palabra
+function handleKeyPress(event) {
+    if (event.key === 'Enter') {
+        const wordInput = document.getElementById('word-input');
+        const word = wordInput.value.trim().toUpperCase();
+        
+        if (isValidWord(word)) {
+            addWord(word);
+            wordInput.value = '';
         }
+    }
+}
 
-        function startGame() {
-            const inputs = document.querySelectorAll('.player-input input');
-            players = Array.from(inputs).map(input => ({
-                name: input.value || `Jugador ${players.length + 1}`,
-                letter: '',
-                words: [],
-                points: 0
-            }));
 
-            document.querySelector('.players-setup').style.display = 'none';
-            showPrepareScreen();
-        }
+ // funcion para que la palabra sea valida y si empieza por la letra que se recomendo 
+function isValidWord(word) {
+    return word && word.startsWith(gameState.letter) && /^[A-ZÑ]+$/.test(word) && !gameState.words.includes(word);
+}
 
-        function showPrepareScreen() {
-            const player = players[currentPlayerIndex];
-            const letters = 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ';
-            player.letter = letters[Math.floor(Math.random() * letters.length)];
-            
-            gameState.words = [];
-            gameState.letter = player.letter;
-            gameState.timeLeft = 60;
 
-            const prepareScreen = document.querySelector('.prepare-screen');
-            prepareScreen.style.display = 'block';
-            document.querySelector('.prepare-message').textContent = `¡${player.name}, es tu turno!`;
-            document.querySelector('.prepare-screen .letter-display').textContent = player.letter;
-        }
+// funcion para que la palabra quede en el recuadro de las palabras
+function addWord(word) {
+    gameState.words.push(word);
+    document.querySelector('.word-list').innerHTML += `<div>${word}</div>`;
+}
 
-        function startPlayerTimer() {
-            document.querySelector('.prepare-screen').style.display = 'none';
-            document.querySelector('.game-screen').style.display = 'block';
-            
-            const player = players[currentPlayerIndex];
-            document.querySelector('.current-player').textContent = `Turno de: ${player.name}`;
-            document.querySelector('.game-screen .letter-display').textContent = player.letter;
-            document.querySelector('.word-list').innerHTML = '';
-            document.getElementById('word-input').value = '';
-            
-            startTimer();
-            document.getElementById('word-input').focus();
-        }
 
-        function startTimer() {
-            updateTimerDisplay();
-            gameState.timerInterval = setInterval(() => {
-                gameState.timeLeft--;
-                updateTimerDisplay();
-                
-                if (gameState.timeLeft <= 0) {
-                    endPlayerTurn();
-                }
-            }, 1000);
-        }
+ // funcion que la palabra no sea solo una letra
+function isValidWord(word) {
+    return word && word.length > 1 && word.startsWith(gameState.letter) 
+           && /^[A-ZÑ]+$/.test(word) && !gameState.words.includes(word);
+}
 
-        function updateTimerDisplay() {
-            document.querySelector('.timer').textContent = `${gameState.timeLeft}s`;
-        }
 
-        function handleKeyPress(event) {
-            if (event.key === 'Enter') {
-                const input = document.getElementById('word-input');
-                const word = input.value.trim().toUpperCase();
-                
-                if (isValidWord(word)) {
-                    addWord(word);
-                    input.value = '';
-                }
-            }
-        }
+// funcion cuando se acabe el tiempo y se guarde los resultados, y siga el siguente Player
+function endPlayerTurn() {
+    clearInterval(gameState.timerInterval);
+    
+    players[currentPlayerIndex].words = [...gameState.words];
+    players[currentPlayerIndex].points = gameState.words.length;
+    
+    currentPlayerIndex++;
+    
+    if (currentPlayerIndex < players.length) {
+        showPrepareScreen();
+    } else {
+        showResults();
+    }
+}
 
-        function isValidWord(word) {
-            return word &&
-                   word.startsWith(gameState.letter) &&
-                   /^[A-ZÑ]+$/.test(word) &&
-                   !gameState.words.includes(word);
-        }
 
-        function addWord(word) {
-            gameState.words.push(word);
-            const wordList = document.querySelector('.word-list');
-            wordList.innerHTML += `<div>${word}</div>`;
-            wordList.scrollTop = wordList.scrollHeight;
-        }
+// funcion para mostrar los resultados 
 
-        function endPlayerTurn() {
-            clearInterval(gameState.timerInterval);
-            document.querySelector('.game-screen').style.display = 'none';
-            
-            players[currentPlayerIndex].words = [...gameState.words];
-            players[currentPlayerIndex].points = gameState.words.length;
-            
-            currentPlayerIndex++;
-            
-            if (currentPlayerIndex < players.length) {
-                showPrepareScreen();
-            } else {
-                showResults();
-            }
-        }
+function showResults() {
+    const tbody = document.querySelector('#results-table tbody');
+    tbody.innerHTML = '';
+    
+    players.sort((a, b) => b.points - a.points);
+    
+    players.forEach(player => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${player.name}</td>
+                <td>${player.letter}</td>
+                <td>${player.words.join(', ')}</td>
+                <td>${player.points}</td>
+            </tr>
+        `;
+    });
+    
+    document.querySelector('.results-screen').style.display = 'block';
+}
 
-        function showResults() {
-            document.querySelector('.results-screen').style.display = 'block';
-            
-            const tbody = document.querySelector('#results-table tbody');
-            tbody.innerHTML = '';
-            
-            players.sort((a, b) => b.points - a.points);
-            
-            players.forEach(player => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${player.name}</td>
-                        <td>${player.letter}</td>
-                        <td>${player.words.join(', ')}</td>
-                        <td>${player.points}</td>
-                    </tr>
-                `;
-            });
-        }
 
-        function resetGame() {
-            currentPlayerIndex = 0;
-            players = [];
-            gameState = {
-                words: [],
-                letter: '',
-                timeLeft: 60,
-                timerInterval: null
-            };
-            
-            document.querySelector('.results-screen').style.display = 'none';
-            document.querySelector('.welcome-screen').style.display = 'block';
-        }
+//funcion para que se repita el juego 
+function resetGame() {
+    currentPlayerIndex = 0;
+    players = [];
+    gameState = { words: [], letter: '', timeLeft: 60 };
+    
+    document.querySelector('.results-screen').style.display = 'none';
+    document.querySelector('.welcome-screen').style.display = 'block';
+}
