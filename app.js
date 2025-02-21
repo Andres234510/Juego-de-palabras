@@ -38,7 +38,7 @@ function showPrepareScreen() {
     const letters = 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ';
     player.letter = letters[Math.floor(Math.random() * letters.length)];
 
-    gameState = { words: [], letter: player.letter, timeLeft: 20 };
+    gameState = { words: [], letter: player.letter, timeLeft: 60 };
 
     document.querySelector('.word-list').innerHTML = ''; 
     document.querySelector('.prepare-screen').style.display = 'block';
